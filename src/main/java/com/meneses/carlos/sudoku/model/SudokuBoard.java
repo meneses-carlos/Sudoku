@@ -6,8 +6,8 @@ import java.util.Stack;
 
 /**
  * Represents the 6x6 Sudoku board.
- * Manages the grid of cells, validates moves according to Sudoku rules,
- * and keeps track of the move history.
+ * Manages the grid of cells, validates moves, checks completion,
+ * provides hints, and maintains the move history for undo operations.
  *
  * @author Jorge Navia
  * @author Carlos Meneses
@@ -22,8 +22,6 @@ public class SudokuBoard {
     public SudokuBoard() {
         board = new ArrayList<>(36);
         history = new Stack<>();
-
-        // Initialize 36 empty cells for a 6x6 grid
         for (int row = 0; row < 6; row++) {
             for (int col = 0; col < 6; col++) {
                 board.add(new Cell(row, col, 0, false));
@@ -32,45 +30,73 @@ public class SudokuBoard {
     }
 
     /**
-     * Calculates the 1D list index from 2D coordinates.
+     * Calculates the 1D index from 2D coordinates.
      *
-     * @param row The row index (0 to 5).
-     * @param col The column index (0 to 5).
-     * @return The index in the 1D list.
+     * @param row Row index (0–5).
+     * @param col Column index (0–5).
+     * @return The corresponding index in the flat list.
      */
     private int getIndex(int row, int col) {
         return row * 6 + col;
     }
 
     /**
-     * Gets the cell at the specified row and column.
+     * Returns the cell at the given row and column.
      *
-     * @param row The row index (0 to 5).
-     * @param col The column index (0 to 5).
-     * @return The Cell object.
+     * @param row Row index (0–5).
+     * @param col Column index (0–5).
+     * @return The Cell at that position.
      */
     public Cell getCell(int row, int col) {
         return board.get(getIndex(row, col));
     }
 
     /**
-     * Sets a value in the board and saves the move to history.
+     * Loads an initial puzzle into the board, marking given cells as fixed.
+     * Each entry in the array is {row, col, value}.
+     * Resets move history.
      *
-     * @param row   The row index.
-     * @param col   The column index.
-     * @param value The new value (1-6, or 0 to clear).
+     * @param clues A 2D array where each row is {row, col, value} of a fixed cell.
      */
-    public void setValue(int row, int col, int value) {
-        Cell cell = getCell(row, col);
-        if (!cell.isFixed() && cell.getValue() != value) {
-            // Save the current state to history before changing it
-            history.push(new Move(row, col, cell.getValue()));
+    public void loadPuzzle(int[][] clues) {
+        // Reset the board
+        for (Cell cell : board) {
+            cell.setValue(0);
+        }
+        history.clear();
+
+        for (int[] clue : clues) {
+            int row = clue[0], col = clue[1], value = clue[2];
+            Cell cell = getCell(row, col);
             cell.setValue(value);
+            // Re-create the cell as fixed (replace in list)
+            board.set(getIndex(row, col), new Cell(row, col, value, true));
         }
     }
 
     /**
-     * Undoes the last move if the history is not empty.
+     * Attempts to set a value in a non-fixed cell and saves the move to history.
+     *
+     * @param row   Row index (0–5).
+     * @param col   Column index (0–5).
+     * @param value New value (1–6, or 0 to clear).
+     * @return True if the value was set, false if the cell is fixed.
+     */
+    public boolean setValue(int row, int col, int value) {
+        Cell cell = getCell(row, col);
+        if (cell.isFixed()) {
+            return false;
+        }
+        if (cell.getValue() != value) {
+            history.push(new Move(row, col, cell.getValue()));
+            cell.setValue(value);
+        }
+        return true;
+    }
+
+    /**
+     * Undoes the last player move, restoring the previous cell value.
+     * Does nothing if there is no move history.
      */
     public void undo() {
         if (!history.isEmpty()) {
@@ -81,41 +107,68 @@ public class SudokuBoard {
     }
 
     /**
-     * Validates if placing a specific value at a given position follows the Sudoku rules.
-     * The grid is 6x6, so rules apply to rows, columns, and 2x3 blocks.
+     * Validates whether placing a value at the given position obeys Sudoku rules.
+     * Checks the row, column, and 2x3 block for duplicates.
      *
-     * @param row   The row index (0 to 5).
-     * @param col   The column index (0 to 5).
-     * @param value The value to check (1-6).
-     * @return True if the move is valid, false otherwise.
+     * @param row   Row index (0–5).
+     * @param col   Column index (0–5).
+     * @param value Value to check (1–6).
+     * @return True if the move is valid, false if it violates a rule.
      */
     public boolean isValidMove(int row, int col, int value) {
-        // 1. Check row for duplicates
         for (int c = 0; c < 6; c++) {
-            if (c != col && getCell(row, c).getValue() == value) {
-                return false;
-            }
+            if (c != col && getCell(row, c).getValue() == value) return false;
         }
-
-        // 2. Check column for duplicates
         for (int r = 0; r < 6; r++) {
-            if (r != row && getCell(r, col).getValue() == value) {
-                return false;
-            }
+            if (r != row && getCell(r, col).getValue() == value) return false;
         }
-
-        // 3. Check 2x3 block for duplicates
         int startRow = (row / 2) * 2;
         int startCol = (col / 3) * 3;
-
         for (int r = startRow; r < startRow + 2; r++) {
             for (int c = startCol; c < startCol + 3; c++) {
-                if ((r != row || c != col) && getCell(r, c).getValue() == value) {
+                if ((r != row || c != col) && getCell(r, c).getValue() == value) return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks if the board is fully and correctly completed.
+     * Every cell must be non-empty and its value must pass validation.
+     *
+     * @return True if all 36 cells are filled with valid values.
+     */
+    public boolean isBoardComplete() {
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                Cell cell = getCell(row, col);
+                if (cell.isEmpty() || !isValidMove(row, col, cell.getValue())) {
                     return false;
                 }
             }
         }
-
         return true;
+    }
+
+    /**
+     * Finds the first empty cell and returns a valid number that can be placed there.
+     * Returns null if no hint is available (board is full or no valid number exists).
+     *
+     * @return An int array {row, col, value} representing the hint, or null if unavailable.
+     */
+    public int[] getHint() {
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                Cell cell = getCell(row, col);
+                if (cell.isEmpty()) {
+                    for (int value = 1; value <= 6; value++) {
+                        if (isValidMove(row, col, value)) {
+                            return new int[]{row, col, value};
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
