@@ -3,6 +3,7 @@ package com.meneses.carlos.sudoku.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.Random;
 
 /**
  * Represents the 6x6 Sudoku board.
@@ -171,4 +172,68 @@ public class SudokuBoard {
         }
         return null;
     }
+    /**
+     * Clears the board completely, removing all numbers and history.
+     * Sets all cells back to empty and not fixed.
+     */
+    public void clearBoard() {
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                board.set(getIndex(row, col), new Cell(row, col, 0, false));
+            }
+        }
+        history.clear();
+    }
+
+    /**
+     * Generates a new valid starting board according to the game rules.
+     * Fills each 2x3 block with exactly 2 valid numbers and marks them as fixed.
+     */
+    public void generateStartingBoard() {
+        Random random = new Random();
+        boolean validBoardGenerated = false;
+
+        while (!validBoardGenerated) {
+            clearBoard();
+            validBoardGenerated = true;
+
+            // Iterate over the 6 blocks (3 block rows, 2 block cols)
+            for (int blockRow = 0; blockRow < 3; blockRow++) {
+                for (int blockCol = 0; blockCol < 2; blockCol++) {
+                    int numbersPlaced = 0;
+                    int attempts = 0; // Guard against infinite loops
+
+                    // Try to place exactly 2 numbers in the current block
+                    while (numbersPlaced < 2 && attempts < 50) {
+                        // Calculate random row (0-1) and col (0-2) within the block
+                        int r = (blockRow * 2) + random.nextInt(2);
+                        int c = (blockCol * 3) + random.nextInt(3);
+
+                        Cell cell = getCell(r, c);
+
+                        // If the cell is empty, try a random number
+                        if (cell.getValue() == 0) {
+                            int num = random.nextInt(6) + 1; // 1 to 6
+
+                            // Check if the random number is valid in this position
+                            if (isValidMove(r, c, num)) {
+                                // Replace the cell with a fixed one
+                                board.set(getIndex(r, c), new Cell(r, c, num, true));
+                                numbersPlaced++;
+                            }
+                        }
+                        attempts++;
+                    }
+
+                    // If we couldn't place 2 numbers, the board is stuck. Restart.
+                    if (numbersPlaced < 2) {
+                        validBoardGenerated = false;
+                        break;
+                    }
+                }
+                if (!validBoardGenerated) break; // Break outer loop to restart
+            }
+        }
+    }
+
 }
