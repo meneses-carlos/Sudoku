@@ -14,8 +14,8 @@ import java.util.Random;
  * @author Carlos Meneses
  */
 public class SudokuBoard {
-    private List<Cell> board;
-    private Stack<Move> history;
+    private final List<Cell> board;
+    private final Stack<Move> history;
 
     /**
      * Constructs an empty 6x6 Sudoku board and initializes the move history.
@@ -52,28 +52,6 @@ public class SudokuBoard {
         return board.get(getIndex(row, col));
     }
 
-    /**
-     * Loads an initial puzzle into the board, marking given cells as fixed.
-     * Each entry in the array is {row, col, value}.
-     * Resets move history.
-     *
-     * @param clues A 2D array where each row is {row, col, value} of a fixed cell.
-     */
-    public void loadPuzzle(int[][] clues) {
-        // Reset the board
-        for (Cell cell : board) {
-            cell.setValue(0);
-        }
-        history.clear();
-
-        for (int[] clue : clues) {
-            int row = clue[0], col = clue[1], value = clue[2];
-            Cell cell = getCell(row, col);
-            cell.setValue(value);
-            // Re-create the cell as fixed (replace in list)
-            board.set(getIndex(row, col), new Cell(row, col, value, true));
-        }
-    }
 
     /**
      * Attempts to set a value in a non-fixed cell and saves the move to history.
@@ -96,17 +74,21 @@ public class SudokuBoard {
     }
 
     /**
-     * Undoes the last player move, restoring the previous cell value.
-     * Does nothing if there is no move history.
+     * Undoes the last move if the history is not empty.
+     *
+     * @return The Move that was undone, or null if there was nothing to undo.
+     * @author Jorge Navia
+     * @author Carlos Meneses
      */
-    public void undo() {
+    public Move undo() {
         if (!history.isEmpty()) {
             Move lastMove = history.pop();
             Cell cell = getCell(lastMove.getRow(), lastMove.getCol());
             cell.setValue(lastMove.getPreviousValue());
+            return lastMove;
         }
+        return null;
     }
-
     /**
      * Validates whether placing a value at the given position obeys Sudoku rules.
      * Checks the row, column, and 2x3 block for duplicates.
@@ -134,45 +116,6 @@ public class SudokuBoard {
     }
 
     /**
-     * Checks if the board is fully and correctly completed.
-     * Every cell must be non-empty and its value must pass validation.
-     *
-     * @return True if all 36 cells are filled with valid values.
-     */
-    public boolean isBoardComplete() {
-        for (int row = 0; row < 6; row++) {
-            for (int col = 0; col < 6; col++) {
-                Cell cell = getCell(row, col);
-                if (cell.isEmpty() || !isValidMove(row, col, cell.getValue())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Finds the first empty cell and returns a valid number that can be placed there.
-     * Returns null if no hint is available (board is full or no valid number exists).
-     *
-     * @return An int array {row, col, value} representing the hint, or null if unavailable.
-     */
-    public int[] getHint() {
-        for (int row = 0; row < 6; row++) {
-            for (int col = 0; col < 6; col++) {
-                Cell cell = getCell(row, col);
-                if (cell.isEmpty()) {
-                    for (int value = 1; value <= 6; value++) {
-                        if (isValidMove(row, col, value)) {
-                            return new int[]{row, col, value};
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    /**
      * Clears the board completely, removing all numbers and history.
      * Sets all cells back to empty and not fixed.
      */
@@ -184,56 +127,24 @@ public class SudokuBoard {
         }
         history.clear();
     }
-
     /**
-     * Generates a new valid starting board according to the game rules.
-     * Fills each 2x3 block with exactly 2 valid numbers and marks them as fixed.
+     * Checks whether the entire board is correctly and completely filled.
+     * A board is complete when all 36 cells have a non-zero value and
+     * every value is valid according to Sudoku rules.
+     *
+     * @return True if the board is fully and correctly solved, false otherwise.
+     * @author Jorge Navia
+     * @author Carlos Meneses
      */
-    public void generateStartingBoard() {
-        Random random = new Random();
-        boolean validBoardGenerated = false;
-
-        while (!validBoardGenerated) {
-            clearBoard();
-            validBoardGenerated = true;
-
-            // Iterate over the 6 blocks (3 block rows, 2 block cols)
-            for (int blockRow = 0; blockRow < 3; blockRow++) {
-                for (int blockCol = 0; blockCol < 2; blockCol++) {
-                    int numbersPlaced = 0;
-                    int attempts = 0; // Guard against infinite loops
-
-                    // Try to place exactly 2 numbers in the current block
-                    while (numbersPlaced < 2 && attempts < 50) {
-                        // Calculate random row (0-1) and col (0-2) within the block
-                        int r = (blockRow * 2) + random.nextInt(2);
-                        int c = (blockCol * 3) + random.nextInt(3);
-
-                        Cell cell = getCell(r, c);
-
-                        // If the cell is empty, try a random number
-                        if (cell.getValue() == 0) {
-                            int num = random.nextInt(6) + 1; // 1 to 6
-
-                            // Check if the random number is valid in this position
-                            if (isValidMove(r, c, num)) {
-                                // Replace the cell with a fixed one
-                                board.set(getIndex(r, c), new Cell(r, c, num, true));
-                                numbersPlaced++;
-                            }
-                        }
-                        attempts++;
-                    }
-
-                    // If we couldn't place 2 numbers, the board is stuck. Restart.
-                    if (numbersPlaced < 2) {
-                        validBoardGenerated = false;
-                        break;
-                    }
-                }
-                if (!validBoardGenerated) break; // Break outer loop to restart
+    public boolean isBoardComplete() {
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                int val = getCell(row, col).getValue();
+                if (val == 0) return false;
+                if (!isValidMove(row, col, val)) return false;
             }
         }
+        return true;
     }
 
 }

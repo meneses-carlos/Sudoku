@@ -8,8 +8,8 @@ package com.meneses.carlos.sudoku.model;
  * @author Carlos Meneses
  */
 public class Cell {
-    private int row;
-    private int col;
+    private final int row;
+    private final int col;
     private int value;
     private boolean fixed;
 
@@ -54,5 +54,15 @@ public class Cell {
             throw new IllegalArgumentException("Cell value must be between 0 and 6, got: " + value);
         }
         this.value = value;
+    }
+    /**
+     * Sets whether this cell is a fixed starting number.
+     *
+     * @param fixed True to mark as fixed, false otherwise.
+     * @author Jorge Navia
+     * @author Carlos Meneses
+     */
+    public void setFixed(boolean fixed) {
+        this.fixed = fixed;
     }
 }

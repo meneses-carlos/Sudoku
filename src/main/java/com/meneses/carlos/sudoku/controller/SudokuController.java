@@ -1,205 +1,296 @@
 package com.meneses.carlos.sudoku.controller;
 
+import com.meneses.carlos.sudoku.model.Cell;
+import com.meneses.carlos.sudoku.model.Move;
+import com.meneses.carlos.sudoku.model.SudokuGame;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
 
+import java.util.Optional;
+
+/**
+ * Controller for the main Sudoku view.
+ * Connects the JavaFX UI with the {@link SudokuGame} model.
+ *
+ * @author Jorge Navia
+ * @author Carlos Meneses
+ */
 public class SudokuController {
 
+    // ── Model ────────────────────────────────────────────────────────────────
+    private SudokuGame game;
 
-    /**
-     * Stores references to all visual cells displayed on the Sudoku board.
-     */
-    private TextField[][] cells = new TextField[6][6];
+    // ── Visual cell grid ─────────────────────────────────────────────────────
+    private final TextField[][] cells = new TextField[6][6];
 
-
-    /**
-     * Represents the row index of the currently selected cell.
-     */
     private int selectedRow = -1;
-
-    /**
-     * Represents the column index of the currently selected cell.
-     */
     private int selectedCol = -1;
 
-    /**
-     * Container used to display and center the Sudoku board.
-     */
-    @FXML
-    private StackPane boardContainer;
+    // ── FXML nodes ───────────────────────────────────────────────────────────
+    @FXML private StackPane boardContainer;
+    @FXML private GridPane  boardGrid;
+    @FXML private Button    hintButton;
+    @FXML private Button    newGameButton;
+    @FXML private Button    undoButton;
+    @FXML private Label     statusLabel;
+    @FXML private Label     titleLabel;
+
+    // ── Lifecycle ────────────────────────────────────────────────────────────
 
     /**
-     * Grid that contains all visual cells of the Sudoku board.
-     */
-    @FXML
-    private GridPane boardGrid;
-
-    /**
-     * Button used to request a hint during the game.
-     */
-    @FXML
-    private Button hintButton;
-
-    /**
-     * Button used to start a new Sudoku game.
-     */
-    @FXML
-    private Button newGameButton;
-
-    /**
-     * Label used to display status and feedback messages to the user.
-     */
-    @FXML
-    private Label statusLabel;
-
-    /**
-     * Label that displays the title of the application.
-     */
-    @FXML
-    private Label titleLabel;
-
-    /**
-     * Button used to undo the last move made by the player.
-     */
-    @FXML
-    private Button undoButton;
-
-    /**
-     * Handles the hint button action.
+     * Called automatically by JavaFX after the FXML is loaded.
+     * Builds the visual grid and starts the first game immediately.
      *
-     * @param event Action event triggered by the user.
-     */
-    @FXML
-    void handleHint(ActionEvent event) {
-
-    }
-
-    /**
-     * Handles the new game button action.
-     *
-     * @param event Action event triggered by the user.
-     */
-    @FXML
-    void handleNewGame(ActionEvent event) {
-
-    }
-
-    /**
-     * Handles the undo button action.
-     *
-     * @param event Action event triggered by the user.
-     */
-    @FXML
-    void handleUndo(ActionEvent event) {
-
-    }
-
-    /**
-     * Initializes the Sudoku board, creates all visual cells,
-     * configures event handlers, and sets up input validation.
+     * @author Carlos Meneses
      */
     @FXML
     public void initialize() {
+        game = new SudokuGame();
+        buildGrid();
+        game.startNewGame();
+        refreshBoard();
+        statusLabel.setText("¡Nuevo juego iniciado! Completa el tablero.");
+    }
 
+    // ── Button handlers ──────────────────────────────────────────────────────
+
+    /**
+     * Handles the "Nuevo Juego" button.
+     * Shows a confirmation alert before resetting the board.
+     *
+     * @param ignoredEvent The action event.
+     * @author Carlos Meneses
+     */
+
+    @FXML
+    void handleNewGame(ActionEvent ignoredEvent) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Nuevo Juego");
+        alert.setHeaderText("¿Iniciar una nueva partida?");
+        alert.setContentText("Se perderá el progreso actual.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            game.startNewGame();
+            refreshBoard();
+            statusLabel.setText("¡Nuevo juego iniciado!");
+        }
+    }
+
+    /**
+     * Handles the "Ayuda" button.
+     * Reveals the correct value in a random empty cell (max 3 times).
+     *
+     * @param ignoredEvent The action event.
+     * @author Carlos Meneses
+     */
+    @SuppressWarnings("unused")
+    @FXML
+    void handleHint(ActionEvent ignoredEvent) {
+        Cell hintCell = game.getHint();
+        if (hintCell == null) {
+            statusLabel.setText("No quedan ayudas disponibles.");
+            return;
+        }
+
+        // Paint the hint cell in green so the player notices it
+        TextField tf = cells[hintCell.getRow()][hintCell.getCol()];
+        tf.setText(String.valueOf(hintCell.getValue()));
+        tf.setStyle("-fx-background-color: #ccffcc; -fx-font-weight: bold;");
+        tf.setEditable(false);
+
+        statusLabel.setText("Ayuda usada. Quedan: " + game.getRemainingHints());
+    }
+
+    /**
+     * Handles the "Deshacer" button.
+     * Reverts the last player move and refreshes only that cell.
+     *
+     * @param ignoredEvent The action event.
+     * @author Carlos Meneses
+     */
+    @SuppressWarnings("unused")
+    @FXML
+    void handleUndo(ActionEvent ignoredEvent) {
+        Move undone = game.undo();
+        if (undone == null) {
+            statusLabel.setText("Nada que deshacer.");
+            return;
+        }
+        refreshCell(undone.getRow(), undone.getCol());
+        statusLabel.setText("Movimiento deshecho en ("
+                + undone.getRow() + ", " + undone.getCol() + ")");
+    }
+
+    // ── Grid construction ────────────────────────────────────────────────────
+
+    /**
+     * Creates all 36 TextField cells, configures their style, input validation,
+     * and selection listeners, then adds them to the GridPane.
+     *
+     * @author Carlos Meneses
+     */
+    private void buildGrid() {
         boardGrid.getChildren().clear();
-
-        boardGrid.setHgap(2);
-        boardGrid.setVgap(2);
+        boardGrid.setHgap(3);
+        boardGrid.setVgap(3);
 
         for (int row = 0; row < 6; row++) {
-
             for (int col = 0; col < 6; col++) {
 
-                TextField cell = new TextField();
+                TextField tf = new TextField();
+                tf.setPrefSize(55, 55);
+                tf.setMinSize(55, 55);
+                tf.setMaxSize(55, 55);
+                tf.setAlignment(Pos.CENTER);
+                tf.setStyle(baseStyle(row, col));
 
-                cell.textProperty().addListener((obs, oldValue, newValue) -> {
+                final int r = row;
+                final int c = col;
 
-                    if (!newValue.matches("[1-6]?")) {
+                // ── Input validation ────────────────────────────────────────
+                tf.textProperty().addListener((obs, oldVal, newVal) -> {
+                    if (newVal.isEmpty()) {
+                        game.setValue(r, c, 0);
+                        tf.setStyle(baseStyle(r, c));
+                        statusLabel.setText("Celda borrada.");
+                        checkWin();
+                        return;
+                    }
+                    if (!newVal.matches("[1-6]")) {
+                        tf.setText(oldVal);
+                        statusLabel.setText("Solo números del 1 al 6.");
+                        return;
+                    }
 
-                        cell.setText(oldValue);
+                    int value = Integer.parseInt(newVal);
 
-                        statusLabel.setText(
-                                "Solo se permiten numeros del 1 al 6"
-                        );
-
+                    if (game.isValidMove(r, c, value)) {
+                        game.setValue(r, c, value);
+                        tf.setStyle(baseStyle(r, c));   // valid → normal color
+                        statusLabel.setText("Número válido.");
+                        checkWin();
                     } else {
-
-                        statusLabel.setText(
-                                "Valor ingresado correctamente"
-                        );
+                        game.setValue(r, c, value);     // store it anyway so undo works
+                        tf.setStyle("-fx-background-color: #ffcccc; "
+                                + "-fx-border-color: red; -fx-border-width: 2;");
+                        statusLabel.setText("¡Número inválido! Viola las reglas del Sudoku.");
                     }
                 });
 
-                cells[row][col] = cell;
-
-                cell.setPrefSize(50,50);
-                cell.setMinSize(50,50);
-                cell.setMaxSize(50,50);
-
-                cell.setAlignment(Pos.CENTER);
-
-                final int currentRow = row;
-                final int currentCol = col;
-
-                cell.setOnMouseClicked(event -> {
-
-                    for (int r = 0; r < 6; r++) {
-                        for (int c = 0; c < 6; c++) {
-                            cells[r][c].setStyle("");
-                        }
-                    }
-
-                    selectedRow = currentRow;
-                    selectedCol = currentCol;
-
-                    statusLabel.setText(
-                            "Celda seleccionada: ("
-                                    + selectedRow
-                                    + ", "
-                                    + selectedCol
-                                    + ")"
-                    );
-
-                    cell.setStyle(
-                            "-fx-background-color: #ffcccc;"
-                    );
-
-                    System.out.println(
-                            "Seleccionada: "
-                                    + selectedRow + ", "
-                                    + selectedCol
-                    );
+                // ── Cell selection ──────────────────────────────────────────
+                tf.setOnMouseClicked(e -> {
+                    clearSelectionHighlight();
+                    selectedRow = r;
+                    selectedCol = c;
+                    tf.setStyle(tf.getStyle()
+                            + "-fx-background-color: #cce5ff;");
+                    statusLabel.setText("Celda seleccionada: ("
+                            + r + ", " + c + ")");
                 });
 
-                boardGrid.add(cell,col,row);
+                cells[row][col] = tf;
+                boardGrid.add(tf, col, row);
             }
         }
     }
 
+    // ── Board refresh ─────────────────────────────────────────────────────────
 
     /**
-     * Updates the visual board according to the current state
-     * of the Sudoku model.
+     * Reads every cell from the model and updates all 36 TextFields.
+     * Fixed cells are shown in dark gray and made non-editable.
+     *
+     * @author Carlos Meneses
      */
     private void refreshBoard() {
-
         for (int row = 0; row < 6; row++) {
-
             for (int col = 0; col < 6; col++) {
-
-                TextField cell = cells[row][col];
-
-                // Model information
-
+                refreshCell(row, col);
             }
+        }
+    }
+
+    /**
+     * Refreshes a single TextField to match the model cell's current state.
+     *
+     * @param row Row index (0-5).
+     * @param col Column index (0-5).
+     * @author Carlos Meneses
+     */
+    private void refreshCell(int row, int col) {
+        Cell modelCell = game.getBoard().getCell(row, col);
+        TextField tf = cells[row][col];
+
+        // Temporarily remove the listener to avoid feedback loops
+        tf.textProperty().unbind();
+
+        int val = modelCell.getValue();
+        tf.setText(val == 0 ? "" : String.valueOf(val));
+
+        if (modelCell.isFixed()) {
+            tf.setEditable(false);
+            tf.setStyle("-fx-background-color: #d0d0d0; "
+                    + "-fx-font-weight: bold; "
+                    + "-fx-text-fill: #222222; "
+                    + baseStyle(row, col));
+        } else {
+            tf.setEditable(true);
+            tf.setStyle(baseStyle(row, col));
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the base CSS style for a cell, adding a thicker border
+     * on block boundaries to visually separate the 2x3 blocks.
+     *
+     * @param row Row index.
+     * @param col Column index.
+     * @return A CSS style string.
+     * @author Carlos Meneses
+     */
+    private String baseStyle(int row, int col) {
+        String top    = (row % 2 == 0) ? "2" : "1";
+        String left   = (col % 3 == 0) ? "2" : "1";
+        String bottom = (row == 5)      ? "2" : "1";
+        String right  = (col == 5)      ? "2" : "1";
+
+        return "-fx-border-color: #555555; "
+                + "-fx-border-width: " + top + " " + right + " " + bottom + " " + left + "; "
+                + "-fx-font-size: 18px; "
+                + "-fx-alignment: center;";
+    }
+
+    /** Removes the blue selection highlight from all cells. */
+    private void clearSelectionHighlight() {
+        if (selectedRow >= 0 && selectedCol >= 0) {
+            refreshCell(selectedRow, selectedCol);
+        }
+    }
+
+    /**
+     * Checks if the game has been won and shows a congratulation alert.
+     *
+     * @author Carlos Meneses
+     */
+    private void checkWin() {
+        if (game.isGameWon()) {
+            statusLabel.setText("🎉 ¡Felicidades! ¡Resolviste el Sudoku!");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("¡Ganaste!");
+            alert.setHeaderText("🎉 ¡Sudoku completado!");
+            alert.setContentText("¡Excelente trabajo! ¿Quieres jugar de nuevo?");
+            alert.showAndWait();
         }
     }
 }
