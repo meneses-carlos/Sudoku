@@ -120,6 +120,21 @@ public class SudokuController {
 
                 TextField cell = new TextField();
 
+                cell.getStyleClass().add("sudoku-cell");
+
+                if (col == 2) {
+                    cell.getStyleClass().add("block-right");
+                }
+
+                if (row == 1 || row == 3) {
+                    cell.getStyleClass().add("block-bottom");
+                }
+
+                if (col == 2 && (row == 1 || row == 3)) {
+                    cell.getStyleClass().add("block-corner");
+                }
+
+
                 cell.textProperty().addListener((obs, oldValue, newValue) -> {
 
                     if (!newValue.matches("[1-6]?")) {
