@@ -13,47 +13,99 @@ import javafx.scene.text.Font;
 
 public class SudokuController {
 
+
+    /**
+     * Stores references to all visual cells displayed on the Sudoku board.
+     */
     private TextField[][] cells = new TextField[6][6];
 
+
+    /**
+     * Represents the row index of the currently selected cell.
+     */
     private int selectedRow = -1;
+
+    /**
+     * Represents the column index of the currently selected cell.
+     */
     private int selectedCol = -1;
 
+    /**
+     * Container used to display and center the Sudoku board.
+     */
     @FXML
     private StackPane boardContainer;
 
+    /**
+     * Grid that contains all visual cells of the Sudoku board.
+     */
     @FXML
     private GridPane boardGrid;
 
+    /**
+     * Button used to request a hint during the game.
+     */
     @FXML
     private Button hintButton;
 
+    /**
+     * Button used to start a new Sudoku game.
+     */
     @FXML
     private Button newGameButton;
 
+    /**
+     * Label used to display status and feedback messages to the user.
+     */
     @FXML
     private Label statusLabel;
 
+    /**
+     * Label that displays the title of the application.
+     */
     @FXML
     private Label titleLabel;
 
+    /**
+     * Button used to undo the last move made by the player.
+     */
     @FXML
     private Button undoButton;
 
+    /**
+     * Handles the hint button action.
+     *
+     * @param event Action event triggered by the user.
+     */
     @FXML
     void handleHint(ActionEvent event) {
 
     }
 
+    /**
+     * Handles the new game button action.
+     *
+     * @param event Action event triggered by the user.
+     */
     @FXML
     void handleNewGame(ActionEvent event) {
 
     }
 
+    /**
+     * Handles the undo button action.
+     *
+     * @param event Action event triggered by the user.
+     */
     @FXML
     void handleUndo(ActionEvent event) {
 
     }
 
+    /**
+     * Initializes the Sudoku board, creates all visual cells,
+     * configures event handlers, and sets up input validation.
+     */
     @FXML
     public void initialize() {
 
@@ -133,6 +185,10 @@ public class SudokuController {
     }
 
 
+    /**
+     * Updates the visual board according to the current state
+     * of the Sudoku model.
+     */
     private void refreshBoard() {
 
         for (int row = 0; row < 6; row++) {
