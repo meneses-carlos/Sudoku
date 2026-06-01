@@ -90,6 +90,19 @@ public class SudokuGame {
      */
     public void setValue(int row, int col, int value) {
         board.setValue(row, col, value);
+        if (listener == null) return;
+
+        if (value == 0) return; // clearing a cell, no event needed
+
+        if (board.isValidMove(row, col, value)) {
+            listener.onValidMove(row, col, value);
+        } else {
+            listener.onInvalidMove(row, col, value);
+        }
+
+        if (board.isBoardComplete()) {
+            listener.onGameWon();
+        }
     }
 
     /**
@@ -136,10 +149,10 @@ public class SudokuGame {
      */
     public Cell getHint() {
         if (hintsUsed >= MAX_HINTS) {
+            if (listener != null) listener.onHintsExhausted();
             return null;
         }
 
-        // Collect all empty (value == 0), non-fixed cells
         List<Cell> emptyCells = new ArrayList<>();
         for (int r = 0; r < 6; r++) {
             for (int c = 0; c < 6; c++) {
@@ -150,11 +163,8 @@ public class SudokuGame {
             }
         }
 
-        if (emptyCells.isEmpty()) {
-            return null;
-        }
+        if (emptyCells.isEmpty()) return null;
 
-        // Pick a random empty cell and reveal its solution value
         Collections.shuffle(emptyCells, new Random());
         Cell chosen = emptyCells.get(0);
         int correctValue = solution[chosen.getRow()][chosen.getCol()];
@@ -162,7 +172,11 @@ public class SudokuGame {
         board.setValue(chosen.getRow(), chosen.getCol(), correctValue);
         hintsUsed++;
 
-        return chosen;
+        if (listener != null) {
+            listener.onHintUsed(chosen, getRemainingHints());
+        }
+
+        return chosen; // ← un solo return al final, nada después de él
     }
 
     /**
@@ -303,4 +317,17 @@ public class SudokuGame {
             // The other 4 positions remain value=0, fixed=false (playable)
         }
     }
+    /** Listener that receives game event notifications. */
+    private GameEventListener listener;
+
+    /**
+     * Registers a listener to receive game event callbacks.
+     *
+     * @param listener The {@link GameEventListener} implementation to notify.
+     * @author Jorge Navia
+     */
+    public void setGameEventListener(GameEventListener listener) {
+        this.listener = listener;
+    }
+
 }
