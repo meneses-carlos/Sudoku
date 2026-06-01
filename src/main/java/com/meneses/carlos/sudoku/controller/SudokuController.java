@@ -1,6 +1,7 @@
 package com.meneses.carlos.sudoku.controller;
 
 import com.meneses.carlos.sudoku.model.Cell;
+import com.meneses.carlos.sudoku.model.GameEventListener;
 import com.meneses.carlos.sudoku.model.Move;
 import com.meneses.carlos.sudoku.model.SudokuGame;
 import javafx.event.ActionEvent;
@@ -13,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-
 import java.util.Optional;
 
 /**
@@ -23,7 +23,7 @@ import java.util.Optional;
  * @author Jorge Navia
  * @author Carlos Meneses
  */
-public class SudokuController {
+public class SudokuController implements GameEventListener {
 
     // ── Model ────────────────────────────────────────────────────────────────
     private SudokuGame game;
@@ -54,6 +54,7 @@ public class SudokuController {
     @FXML
     public void initialize() {
         game = new SudokuGame();
+        game.setGameEventListener(this); // ← registra el controller como listener
         buildGrid();
         game.startNewGame();
         refreshBoard();
@@ -292,5 +293,44 @@ public class SudokuController {
             alert.setContentText("¡Excelente trabajo! ¿Quieres jugar de nuevo?");
             alert.showAndWait();
         }
+
     }
+    @Override
+    public void onHintsExhausted() {
+        statusLabel.setText("No quedan ayudas disponibles.");
+    }
+    @Override
+    public void onValidMove(int row, int col, int value) {
+        cells[row][col].setStyle(baseStyle(row, col));
+        statusLabel.setText("Número válido.");
+    }
+
+    @Override
+    public void onInvalidMove(int row, int col, int value) {
+        cells[row][col].setStyle(
+                "-fx-background-color: #ffcccc; " +
+                        "-fx-border-color: red; -fx-border-width: 2;"
+        );
+        statusLabel.setText("¡Número inválido! Viola las reglas del Sudoku.");
+    }
+
+    @Override
+    public void onGameWon() {
+        statusLabel.setText("🎉 ¡Felicidades! ¡Resolviste el Sudoku!");
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("¡Ganaste!");
+        alert.setHeaderText("🎉 ¡Sudoku completado!");
+        alert.setContentText("¡Excelente trabajo! ¿Quieres jugar de nuevo?");
+        alert.showAndWait();
+    }
+
+    @Override
+    public void onHintUsed(Cell cell, int remainingHints) {
+        TextField tf = cells[cell.getRow()][cell.getCol()];
+        tf.setText(String.valueOf(cell.getValue()));
+        tf.setStyle("-fx-background-color: #ccffcc; -fx-font-weight: bold;");
+        tf.setEditable(false);
+        statusLabel.setText("Ayuda usada. Quedan: " + remainingHints);
+    }
+
 }
