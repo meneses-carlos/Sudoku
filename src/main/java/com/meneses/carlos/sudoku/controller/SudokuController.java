@@ -105,7 +105,11 @@ public class SudokuController implements GameEventListener {
         // Paint the hint cell in green so the player notices it
         TextField tf = cells[hintCell.getRow()][hintCell.getCol()];
         tf.setText(String.valueOf(hintCell.getValue()));
-        tf.setStyle("-fx-background-color: #ccffcc; -fx-font-weight: bold;");
+        tf.setStyle(
+                "-fx-background-color: #550000; "
+                        + "-fx-text-fill: #ffcccc; "
+                        + "-fx-font-weight: bold;"
+        );
         tf.setEditable(false);
 
         statusLabel.setText("Ayuda usada. Quedan: " + game.getRemainingHints());
@@ -148,9 +152,10 @@ public class SudokuController implements GameEventListener {
             for (int col = 0; col < 6; col++) {
 
                 TextField tf = new TextField();
-                tf.setPrefSize(55, 55);
-                tf.setMinSize(55, 55);
-                tf.setMaxSize(55, 55);
+                tf.getStyleClass().add("sudoku-cell");
+                tf.setPrefSize(60, 60);
+                tf.setMinSize(60, 60);
+                tf.setMaxSize(60, 60);
                 tf.setAlignment(Pos.CENTER);
                 tf.setStyle(baseStyle(row, col));
 
@@ -180,10 +185,17 @@ public class SudokuController implements GameEventListener {
                         statusLabel.setText("Número válido.");
                         checkWin();
                     } else {
-                        game.setValue(r, c, value);     // store it anyway so undo works
-                        tf.setStyle("-fx-background-color: #ffcccc; "
-                                + "-fx-border-color: red; -fx-border-width: 2;");
-                        statusLabel.setText("¡Número inválido! Viola las reglas del Sudoku.");
+                        game.setValue(r, c, value);
+
+                        tf.setStyle(
+                                baseStyle(r, c)
+                                        + "-fx-background-color: #140000; "
+                                        + "-fx-text-fill: white; "
+                                        + "-fx-border-color: #ffd700; "
+                                        + "-fx-border-width: 3;"
+                        );
+
+                        statusLabel.setText("Movimiento inválido");
                     }
                 });
 
@@ -192,8 +204,12 @@ public class SudokuController implements GameEventListener {
                     clearSelectionHighlight();
                     selectedRow = r;
                     selectedCol = c;
-                    tf.setStyle(tf.getStyle()
-                            + "-fx-background-color: #cce5ff;");
+                    tf.setStyle(
+                            baseStyle(r, c)
+                                    + "-fx-background-color: #330000; "
+                                    + "-fx-border-color: #ff5555; "
+                                    + "-fx-border-width: 2;"
+                    );
                     statusLabel.setText("Celda seleccionada: ("
                             + r + ", " + c + ")");
                 });
@@ -239,9 +255,9 @@ public class SudokuController implements GameEventListener {
 
         if (modelCell.isFixed()) {
             tf.setEditable(false);
-            tf.setStyle("-fx-background-color: #d0d0d0; "
+            tf.setStyle("-fx-background-color: #2a0000; "
                     + "-fx-font-weight: bold; "
-                    + "-fx-text-fill: #222222; "
+                    + "-fx-text-fill: white; "
                     + baseStyle(row, col));
         } else {
             tf.setEditable(true);
@@ -266,8 +282,12 @@ public class SudokuController implements GameEventListener {
         String bottom = (row == 5)      ? "2" : "1";
         String right  = (col == 5)      ? "2" : "1";
 
-        return "-fx-border-color: #555555; "
-                + "-fx-border-width: " + top + " " + right + " " + bottom + " " + left + "; "
+        return "-fx-border-color: #aa0000; "
+                + "-fx-border-width: "
+                + top + " "
+                + right + " "
+                + bottom + " "
+                + left + "; "
                 + "-fx-font-size: 18px; "
                 + "-fx-alignment: center;";
     }
@@ -308,10 +328,14 @@ public class SudokuController implements GameEventListener {
     @Override
     public void onInvalidMove(int row, int col, int value) {
         cells[row][col].setStyle(
-                "-fx-background-color: #ffcccc; " +
-                        "-fx-border-color: red; -fx-border-width: 2;"
+                baseStyle(row, col)
+                        + "-fx-background-color: #140000; "
+                        + "-fx-text-fill: white; "
+                        + "-fx-border-color: #ffd700; "
+                        + "-fx-border-width: 3;"
         );
-        statusLabel.setText("¡Número inválido! Viola las reglas del Sudoku.");
+
+        statusLabel.setText("Movimiento inválido");
     }
 
     @Override
@@ -328,7 +352,11 @@ public class SudokuController implements GameEventListener {
     public void onHintUsed(Cell cell, int remainingHints) {
         TextField tf = cells[cell.getRow()][cell.getCol()];
         tf.setText(String.valueOf(cell.getValue()));
-        tf.setStyle("-fx-background-color: #ccffcc; -fx-font-weight: bold;");
+        tf.setStyle(
+                "-fx-background-color: #550000; "
+                        + "-fx-text-fill: #ffcccc; "
+                        + "-fx-font-weight: bold;"
+        );
         tf.setEditable(false);
         statusLabel.setText("Ayuda usada. Quedan: " + remainingHints);
     }
