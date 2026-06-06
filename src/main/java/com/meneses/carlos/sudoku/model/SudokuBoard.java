@@ -3,7 +3,7 @@ package com.meneses.carlos.sudoku.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.Random;
+
 
 /**
  * Represents the 6x6 Sudoku board.
@@ -14,11 +14,23 @@ import java.util.Random;
  * @author Carlos Meneses
  */
 public class SudokuBoard {
+
+    /**
+     * Flat list containing the 36 cells of the Sudoku board.
+     * Cells are accessed through row/column coordinates.
+     */
     private final List<Cell> board;
+
+    /**
+     * Stores the history of player moves to support undo operations.
+     */
     private final Stack<Move> history;
 
     /**
      * Constructs an empty 6x6 Sudoku board and initializes the move history.
+     *
+     * @author Jorge Navia
+     * @author Carlos Meneses
      */
     public SudokuBoard() {
         board = new ArrayList<>(36);
@@ -118,6 +130,9 @@ public class SudokuBoard {
     /**
      * Clears the board completely, removing all numbers and history.
      * Sets all cells back to empty and not fixed.
+     *
+     * @author Jorge Navia
+     * @author Carlos Meneses
      */
     public void clearBoard() {
         for (int row = 0; row < 6; row++) {

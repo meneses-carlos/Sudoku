@@ -176,7 +176,7 @@ public class SudokuGame {
             listener.onHintUsed(chosen, getRemainingHints());
         }
 
-        return chosen; // ← un solo return al final, nada después de él
+        return chosen;
     }
 
     /**
@@ -206,13 +206,13 @@ public class SudokuGame {
      */
     private boolean generateSolution(int row, int col) {
 
-        // Advance past the last column → move to next row
+        // Advance past the last column - move to next row
         if (col == 6) {
             col = 0;
             row++;
         }
 
-        // All 6 rows filled → solution is complete
+        // All 6 rows filled - solution is complete
         if (row == 6) {
             return true;
         }
@@ -317,7 +317,11 @@ public class SudokuGame {
             // The other 4 positions remain value=0, fixed=false (playable)
         }
     }
-    /** Listener that receives game event notifications. */
+    /**
+     * Listener used to notify the controller about
+     * game-related events such as valid moves,
+     * invalid moves, hints and victory conditions.
+     */
     private GameEventListener listener;
 
     /**

@@ -8,9 +8,15 @@ package com.meneses.carlos.sudoku.model;
  * @author Carlos Meneses
  */
 public class Move {
-    private int row;
-    private int col;
-    private int previousValue;
+
+    /** Row index of the modified cell. */
+    private final int row;
+
+    /** Column index of the modified cell. */
+    private final int col;
+
+    /** Value stored before the move was performed. */
+    private final int previousValue;
 
     /**
      * Constructs a new Move to record a change in the grid.
