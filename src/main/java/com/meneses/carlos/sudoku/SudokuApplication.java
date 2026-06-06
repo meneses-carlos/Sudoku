@@ -19,7 +19,7 @@ public class SudokuApplication extends Application {
                 ).toExternalForm()
         );
 
-        stage.setTitle("Hello!");
+        stage.setTitle("SUDOKUU!");
         stage.setScene(scene);
         stage.show();
     }

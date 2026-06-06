@@ -12,7 +12,7 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="528.0" prefWidth="673.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.meneses.carlos.sudoku.controller.SudokuController">
    <top>
-      <Label fx:id="titleLabel" contentDisplay="CENTER" prefHeight="86.0" prefWidth="88.0" text="SUDOKU 6x6" textAlignment="CENTER" BorderPane.alignment="CENTER">
+      <Label fx:id="titleLabel" contentDisplay="CENTER" prefHeight="86.0" prefWidth="221.0" styleClass="title-label" text="SUDOKU 6x6" textAlignment="CENTER" BorderPane.alignment="CENTER">
          <font>
             <Font size="15.0" />
          </font></Label>
@@ -20,7 +20,7 @@
    <center>
       <StackPane fx:id="boardContainer" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
-            <GridPane fx:id="boardGrid" alignment="CENTER" prefHeight="320.0" prefWidth="320.0" StackPane.alignment="CENTER">
+            <GridPane fx:id="boardGrid" alignment="CENTER" prefHeight="320.0" prefWidth="320.0" styleClass="sudoku-board" StackPane.alignment="CENTER">
             </GridPane>
          </children>
       </StackPane>
@@ -38,7 +38,7 @@
                   <Insets />
                </opaqueInsets></HBox>
             <Label text="Estado:" />
-            <Label fx:id="statusLabel" text="Nada que deshacer" />
+            <Label fx:id="statusLabel" styleClass="status-label" text="Nada que deshacer" />
          </children>
       </VBox>
    </bottom>

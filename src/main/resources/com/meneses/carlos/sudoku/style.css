@@ -1,29 +1,119 @@
+.root {
+    -fx-background-color: linear-gradient(
+            to bottom,
+            #140000,
+            #050000
+    );
+}
+
+/* ===========================
+   TITLE
+   =========================== */
+
+.title-label {
+    -fx-text-fill: #ff9999;
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+}
+
+/* ===========================
+   BOARD
+   =========================== */
+
+.sudoku-board {
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(255,0,0,0.85),
+            25,
+            0.5,
+            0,
+            0
+    );
+}
+
+/* ===========================
+   CELLS
+   =========================== */
 
 .sudoku-cell {
 
-    -fx-font-size: 18px;
+    -fx-font-size: 22px;
+
+    -fx-font-weight: bold;
 
     -fx-alignment: center;
 
-    -fx-background-color: white;
+    -fx-background-color: #140000;
 
-    -fx-border-color: gray;
+    -fx-text-fill: white;
 
-    -fx-border-width: 1;
-
+    -fx-border-color: #550000;
 }
 
-.block-right {
-    -fx-border-width: 1 2 1 1;
-    -fx-border-color: #444444;
+/* ===========================
+   BUTTONS
+   =========================== */
+
+.button {
+
+    -fx-background-color:
+            linear-gradient(
+                    #c62828,
+                    #8e0000
+            );
+
+    -fx-text-fill: white;
+
+    -fx-font-size: 15px;
+
+    -fx-font-weight: bold;
+
+    -fx-background-radius: 8;
+
+    -fx-cursor: hand;
 }
 
-.block-bottom {
-    -fx-border-width: 1 1 2 1;
-    -fx-border-color: #444444;
+.button:hover {
+
+    -fx-background-color:
+            linear-gradient(
+                    #ff4444,
+                    #b00000
+            );
 }
 
-.block-corner {
-    -fx-border-width: 1 2 2 1;
-    -fx-border-color: #444444;
+/* ===========================
+   LABELS
+   =========================== */
+
+.label {
+    -fx-text-fill: #ff9999;
+}
+
+.status-label {
+    -fx-font-size: 14px;
+}
+
+
+/* ===========================
+    TEXTS
+   =========================== */
+
+.text-field {
+
+    -fx-highlight-fill: #550000;
+
+    -fx-highlight-text-fill: white;
+
+    -fx-focus-color: #ff4444;
+
+    -fx-faint-focus-color: transparent;
+}
+
+.text-field:focused {
+
+    -fx-border-color: #ff6666;
+
+    -fx-border-width: 2;
 }
