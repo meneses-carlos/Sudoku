@@ -26,17 +26,35 @@ import java.util.Optional;
 public class SudokuController implements GameEventListener {
 
     // ── Model ────────────────────────────────────────────────────────────────
+    /**
+     * Main game model that contains the Sudoku logic.
+     */
     private SudokuGame game;
 
     // ── Visual cell grid ─────────────────────────────────────────────────────
+    /**
+     * Visual representation of the Sudoku board.
+     * Each TextField corresponds to one cell in the model.
+     */
     private final TextField[][] cells = new TextField[6][6];
 
+    /** Currently selected row. */
     private int selectedRow = -1;
+
+    /** Currently selected column. */
     private int selectedCol = -1;
 
     // ── FXML nodes ───────────────────────────────────────────────────────────
+    /**
+     * Main container that holds the Sudoku board.
+     */
     @FXML private StackPane boardContainer;
+
+    /**
+     * Grid that displays the 6x6 Sudoku cells.
+     */
     @FXML private GridPane  boardGrid;
+
     @FXML private Button    hintButton;
     @FXML private Button    newGameButton;
     @FXML private Button    undoButton;
@@ -54,7 +72,7 @@ public class SudokuController implements GameEventListener {
     @FXML
     public void initialize() {
         game = new SudokuGame();
-        game.setGameEventListener(this); // ← registra el controller como listener
+        game.setGameEventListener(this);
         buildGrid();
         game.startNewGame();
         refreshBoard();
@@ -181,7 +199,7 @@ public class SudokuController implements GameEventListener {
 
                     if (game.isValidMove(r, c, value)) {
                         game.setValue(r, c, value);
-                        tf.setStyle(baseStyle(r, c));   // valid → normal color
+                        tf.setStyle(baseStyle(r, c));   // valid - normal color
                         statusLabel.setText("Número válido.");
                         checkWin();
                     } else {
@@ -277,12 +295,25 @@ public class SudokuController implements GameEventListener {
      * @author Carlos Meneses
      */
     private String baseStyle(int row, int col) {
-        String top    = (row % 2 == 0) ? "2" : "1";
-        String left   = (col % 3 == 0) ? "2" : "1";
-        String bottom = (row == 5)      ? "2" : "1";
-        String right  = (col == 5)      ? "2" : "1";
 
-        return "-fx-border-color: #aa0000; "
+        String top = "1";
+        String left = "1";
+        String bottom = "1";
+        String right = "1";
+
+        if (row == 0 || row == 2 || row == 4)
+            top = "4";
+
+        if (col == 0 || col == 3)
+            left = "4";
+
+        if (row == 5)
+            bottom = "4";
+
+        if (col == 5)
+            right = "4";
+
+        return "-fx-border-color: #ff6666; "
                 + "-fx-border-width: "
                 + top + " "
                 + right + " "
@@ -315,16 +346,37 @@ public class SudokuController implements GameEventListener {
         }
 
     }
+
+
+    /**
+     * Called when the player has used all available hints.
+     */
     @Override
     public void onHintsExhausted() {
         statusLabel.setText("No quedan ayudas disponibles.");
     }
+
+    /**
+     * Called when a valid move is entered.
+     *
+     * @param row Row index.
+     * @param col Column index.
+     * @param value Entered value.
+     */
     @Override
     public void onValidMove(int row, int col, int value) {
         cells[row][col].setStyle(baseStyle(row, col));
         statusLabel.setText("Número válido.");
     }
 
+
+    /**
+     * Called when a move violates Sudoku rules.
+     *
+     * @param row Row index.
+     * @param col Column index.
+     * @param value Invalid value entered.
+     */
     @Override
     public void onInvalidMove(int row, int col, int value) {
         cells[row][col].setStyle(
@@ -338,6 +390,9 @@ public class SudokuController implements GameEventListener {
         statusLabel.setText("Movimiento inválido");
     }
 
+    /**
+     * Called when the Sudoku puzzle has been completed successfully.
+     */
     @Override
     public void onGameWon() {
         statusLabel.setText("🎉 ¡Felicidades! ¡Resolviste el Sudoku!");
@@ -348,6 +403,12 @@ public class SudokuController implements GameEventListener {
         alert.showAndWait();
     }
 
+    /**
+     * Called after a hint is provided to the player.
+     *
+     * @param cell Cell that received the hint.
+     * @param remainingHints Number of hints still available.
+     */
     @Override
     public void onHintUsed(Cell cell, int remainingHints) {
         TextField tf = cells[cell.getRow()][cell.getCol()];

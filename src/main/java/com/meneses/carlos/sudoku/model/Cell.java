@@ -8,9 +8,17 @@ package com.meneses.carlos.sudoku.model;
  * @author Carlos Meneses
  */
 public class Cell {
+
+    /** Row position of the cell (0-5). */
     private final int row;
+
+    /** Column position of the cell (0-5). */
     private final int col;
+
+    /** Current value stored in the cell. */
     private int value;
+
+    /** Indicates whether the cell is a fixed clue. */
     private boolean fixed;
 
     /**
@@ -28,9 +36,32 @@ public class Cell {
         this.fixed = fixed;
     }
 
+    /**
+     * Returns the row index of this cell.
+     *
+     * @return Row position (0-5).
+     */
     public int getRow() { return row; }
+
+    /**
+     * Returns the column index of this cell.
+     *
+     * @return Column position (0-5).
+     */
     public int getCol() { return col; }
+
+    /**
+     * Returns the current value stored in the cell.
+     *
+     * @return Cell value.
+     */
     public int getValue() { return value; }
+
+    /**
+     * Indicates whether the cell is fixed and cannot be edited.
+     *
+     * @return True if the cell is fixed.
+     */
     public boolean isFixed() { return fixed; }
 
     /**
