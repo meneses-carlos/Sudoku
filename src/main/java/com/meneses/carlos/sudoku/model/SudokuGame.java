@@ -22,8 +22,6 @@ import java.util.Random;
  */
 public class SudokuGame {
 
-    /** Maximum number of hints allowed per game. */
-    private static final int MAX_HINTS = 3;
 
     /** The playable board shown to the player. */
     private SudokuBoard board;
@@ -44,7 +42,6 @@ public class SudokuGame {
     public SudokuGame() {
         this.board = new SudokuBoard();
         this.solution = new int[6][6];
-        this.hintsUsed = 0;
     }
 
     // -------------------------------------------------------------------------
@@ -59,7 +56,6 @@ public class SudokuGame {
      * @author Carlos Meneses
      */
     public void startNewGame() {
-        hintsUsed = 0;
 
         // Step 1: fill solution[][] with a complete valid Sudoku
         solution = new int[6][6];
@@ -137,22 +133,16 @@ public class SudokuGame {
 
     /**
      * Provides a hint by revealing the correct solution value in a randomly
-     * chosen empty cell. Limited to {@value #MAX_HINTS} uses per game.
-     *
-     * <p>The revealed cell is NOT marked as fixed, so the player can still
-     * edit it, but the hint counter prevents solving the entire board this way.
+     * chosen empty cell. Hints are unlimited, but cannot be used when only
+     * one empty cell remains — the player must complete the last move manually
+     * to win the game.
      *
      * @return The {@link Cell} that was filled with the hint,
-     *         or null if the limit has been reached or no empty cells remain.
+     *         or null if only one (or zero) empty cells remain.
      * @author Jorge Navia
      * @author Carlos Meneses
      */
     public Cell getHint() {
-        if (hintsUsed >= MAX_HINTS) {
-            if (listener != null) listener.onHintsExhausted();
-            return null;
-        }
-
         List<Cell> emptyCells = new ArrayList<>();
         for (int r = 0; r < 6; r++) {
             for (int c = 0; c < 6; c++) {
@@ -163,35 +153,41 @@ public class SudokuGame {
             }
         }
 
-        if (emptyCells.isEmpty()) return null;
+        // Block hint if only one empty cell remains: the player must win manually
+        if (emptyCells.size() <= 1) {
+            if (listener != null) listener.onHintsExhausted();
+            return null;
+        }
 
         Collections.shuffle(emptyCells, new Random());
         Cell chosen = emptyCells.get(0);
         int correctValue = solution[chosen.getRow()][chosen.getCol()];
 
         board.setValue(chosen.getRow(), chosen.getCol(), correctValue);
-        hintsUsed++;
 
         if (listener != null) {
-            listener.onHintUsed(chosen, getRemainingHints());
+            listener.onHintUsed(chosen, emptyCells.size() - 2);
         }
 
         return chosen;
     }
-
     /**
-     * Returns how many hints the player has left this game.
+     * Returns the number of empty cells that can still receive a hint.
+     * The last empty cell is always excluded — the player must fill it manually.
      *
-     * @return Remaining hints (MAX_HINTS - hintsUsed).
+     * @return Number of cells available for hints (empty cells minus 1).
+     * @author Jorge Navia
+     * @author Carlos Meneses
      */
     public int getRemainingHints() {
-        return MAX_HINTS - hintsUsed;
+        int count = 0;
+        for (int r = 0; r < 6; r++) {
+            for (int c = 0; c < 6; c++) {
+                if (board.getCell(r, c).getValue() == 0) count++;
+            }
+        }
+        return Math.max(0, count - 1);
     }
-
-    // -------------------------------------------------------------------------
-    // Private generation logic
-    // -------------------------------------------------------------------------
-
     /**
      * Recursively fills {@code solution} using backtracking.
      * Cells are visited left-to-right, top-to-bottom.
