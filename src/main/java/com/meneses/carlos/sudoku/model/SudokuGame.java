@@ -279,18 +279,18 @@ public class SudokuGame {
      */
     private void applyInitialClues() {
 
-        // Top-left corner (startRow, startCol) of each 2x3 block
-        int[][] blockOrigins = {
-                {0, 0}, {0, 3},
-                {2, 0}, {2, 3},
-                {4, 0}, {4, 3}
+        // Top-left corner of each of the six 2x3 blocks
+        BlockOrigin[] blockOrigins = {
+                new BlockOrigin(0, 0), new BlockOrigin(0, 3),
+                new BlockOrigin(2, 0), new BlockOrigin(2, 3),
+                new BlockOrigin(4, 0), new BlockOrigin(4, 3)
         };
 
         Random random = new Random();
 
-        for (int[] origin : blockOrigins) {
-            int startRow = origin[0];
-            int startCol = origin[1];
+        for (BlockOrigin origin : blockOrigins) {
+            int startRow = origin.row();
+            int startCol = origin.col();
 
             // List all 6 cell positions in this block
             List<int[]> positions = new ArrayList<>();
@@ -313,6 +313,51 @@ public class SudokuGame {
             // The other 4 positions remain value=0, fixed=false (playable)
         }
     }
+
+    /**
+     * Top-left coordinate of one of the six 2x3 blocks, used to distribute
+     * the initial clues evenly across the board in {@link #applyInitialClues()}.
+     *
+     * @author Jorge Navia
+     */
+    private static final class BlockOrigin {
+
+        /** Row of the block's top-left cell. */
+        private final int row;
+
+        /** Column of the block's top-left cell. */
+        private final int col;
+
+        /**
+         * Constructs a new block origin.
+         *
+         * @param row Row of the block's top-left cell.
+         * @param col Column of the block's top-left cell.
+         */
+        private BlockOrigin(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        /**
+         * Returns the row of this block's top-left cell.
+         *
+         * @return Row index.
+         */
+        private int row() {
+            return row;
+        }
+
+        /**
+         * Returns the column of this block's top-left cell.
+         *
+         * @return Column index.
+         */
+        private int col() {
+            return col;
+        }
+    }
+
     /**
      * Listener used to notify the controller about
      * game-related events such as valid moves,

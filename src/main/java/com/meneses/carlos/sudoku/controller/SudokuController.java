@@ -1,9 +1,10 @@
 package com.meneses.carlos.sudoku.controller;
 
 import com.meneses.carlos.sudoku.model.Cell;
-import com.meneses.carlos.sudoku.model.GameEventListener;
+import com.meneses.carlos.sudoku.model.GameEventAdapter;
 import com.meneses.carlos.sudoku.model.Move;
 import com.meneses.carlos.sudoku.model.SudokuGame;
+import com.meneses.carlos.sudoku.view.CellStyler;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -20,10 +21,16 @@ import java.util.Optional;
  * Controller for the main Sudoku view.
  * Connects the JavaFX UI with the {@link SudokuGame} model.
  *
+ * <p>Extends {@link GameEventAdapter} instead of implementing
+ * {@link com.meneses.carlos.sudoku.model.GameEventListener} directly,
+ * so all game-reaction logic (styling, status messages, win/hint
+ * feedback) is centralized in the overridden callbacks below rather
+ * than duplicated inline next to the raw UI event handlers.
+ *
  * @author Jorge Navia
  * @author Carlos Meneses
  */
-public class SudokuController implements GameEventListener {
+public class SudokuController extends GameEventAdapter {
 
     // ── Model ────────────────────────────────────────────────────────────────
     /**
@@ -106,31 +113,19 @@ public class SudokuController implements GameEventListener {
 
     /**
      * Handles the "Ayuda" button.
-     * Reveals the correct value in a random empty cell (max 3 times).
+     * Delegates to {@link SudokuGame#getHint()}. Hints are unlimited
+     * except when only one empty cell remains, in which case the model
+     * blocks the hint so the player must complete the last move manually.
+     * The resulting UI feedback (cell reveal or exhaustion message) is
+     * applied by the {@code onHintUsed}/{@code onHintsExhausted} callbacks.
      *
      * @param ignoredEvent The action event.
      * @author Carlos Meneses
+     * @author Jorge Navia
      */
-    @SuppressWarnings("unused")
     @FXML
     void handleHint(ActionEvent ignoredEvent) {
-        Cell hintCell = game.getHint();
-        if (hintCell == null) {
-            statusLabel.setText("No quedan ayudas disponibles.");
-            return;
-        }
-
-        // Paint the hint cell in green so the player notices it
-        TextField tf = cells[hintCell.getRow()][hintCell.getCol()];
-        tf.setText(String.valueOf(hintCell.getValue()));
-        tf.setStyle(
-                "-fx-background-color: #550000; "
-                        + "-fx-text-fill: #ffcccc; "
-                        + "-fx-font-weight: bold;"
-        );
-        tf.setEditable(false);
-
-        statusLabel.setText("Ayuda usada. Quedan: " + game.getRemainingHints());
+        game.getHint();
     }
 
     /**
@@ -175,18 +170,22 @@ public class SudokuController implements GameEventListener {
                 tf.setMinSize(60, 60);
                 tf.setMaxSize(60, 60);
                 tf.setAlignment(Pos.CENTER);
-                tf.setStyle(baseStyle(row, col));
+                tf.setStyle(CellStyler.baseStyle(row, col));
 
                 final int r = row;
                 final int c = col;
 
                 // ── Input validation ────────────────────────────────────────
+                // Only raw-text restrictions live here (empty/clear, range
+                // 1-6). Game-rule feedback (valid/invalid styling, status
+                // messages, win detection) is handled exclusively by the
+                // onValidMove/onInvalidMove/onGameWon callbacks below, which
+                // SudokuGame#setValue triggers after updating the model.
                 tf.textProperty().addListener((obs, oldVal, newVal) -> {
                     if (newVal.isEmpty()) {
                         game.setValue(r, c, 0);
-                        tf.setStyle(baseStyle(r, c));
+                        tf.setStyle(CellStyler.baseStyle(r, c));
                         statusLabel.setText("Celda borrada.");
-                        checkWin();
                         return;
                     }
                     if (!newVal.matches("[1-6]")) {
@@ -196,25 +195,7 @@ public class SudokuController implements GameEventListener {
                     }
 
                     int value = Integer.parseInt(newVal);
-
-                    if (game.isValidMove(r, c, value)) {
-                        game.setValue(r, c, value);
-                        tf.setStyle(baseStyle(r, c));   // valid - normal color
-                        statusLabel.setText("Número válido.");
-                        checkWin();
-                    } else {
-                        game.setValue(r, c, value);
-
-                        tf.setStyle(
-                                baseStyle(r, c)
-                                        + "-fx-background-color: #140000; "
-                                        + "-fx-text-fill: white; "
-                                        + "-fx-border-color: #ffd700; "
-                                        + "-fx-border-width: 3;"
-                        );
-
-                        statusLabel.setText("Movimiento inválido");
-                    }
+                    game.setValue(r, c, value);
                 });
 
                 // ── Cell selection ──────────────────────────────────────────
@@ -222,12 +203,7 @@ public class SudokuController implements GameEventListener {
                     clearSelectionHighlight();
                     selectedRow = r;
                     selectedCol = c;
-                    tf.setStyle(
-                            baseStyle(r, c)
-                                    + "-fx-background-color: #330000; "
-                                    + "-fx-border-color: #ff5555; "
-                                    + "-fx-border-width: 2;"
-                    );
+                    tf.setStyle(CellStyler.selectedStyle(r, c));
                     statusLabel.setText("Celda seleccionada: ("
                             + r + ", " + c + ")");
                 });
@@ -273,57 +249,16 @@ public class SudokuController implements GameEventListener {
 
         if (modelCell.isFixed()) {
             tf.setEditable(false);
-            tf.setStyle("-fx-background-color: #2a0000; "
-                    + "-fx-font-weight: bold; "
-                    + "-fx-text-fill: white; "
-                    + baseStyle(row, col));
+            tf.setStyle(CellStyler.fixedStyle(row, col));
         } else {
             tf.setEditable(true);
-            tf.setStyle(baseStyle(row, col));
+            tf.setStyle(CellStyler.baseStyle(row, col));
         }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /**
-     * Returns the base CSS style for a cell, adding a thicker border
-     * on block boundaries to visually separate the 2x3 blocks.
-     *
-     * @param row Row index.
-     * @param col Column index.
-     * @return A CSS style string.
-     * @author Carlos Meneses
-     */
-    private String baseStyle(int row, int col) {
-
-        String top = "1";
-        String left = "1";
-        String bottom = "1";
-        String right = "1";
-
-        if (row == 0 || row == 2 || row == 4)
-            top = "4";
-
-        if (col == 0 || col == 3)
-            left = "4";
-
-        if (row == 5)
-            bottom = "4";
-
-        if (col == 5)
-            right = "4";
-
-        return "-fx-border-color: #ff6666; "
-                + "-fx-border-width: "
-                + top + " "
-                + right + " "
-                + bottom + " "
-                + left + "; "
-                + "-fx-font-size: 18px; "
-                + "-fx-alignment: center;";
-    }
-
-    /** Removes the blue selection highlight from all cells. */
+    /** Removes the selection highlight from the previously selected cell. */
     private void clearSelectionHighlight() {
         if (selectedRow >= 0 && selectedCol >= 0) {
             refreshCell(selectedRow, selectedCol);
@@ -331,29 +266,11 @@ public class SudokuController implements GameEventListener {
     }
 
     /**
-     * Checks if the game has been won and shows a congratulation alert.
-     *
-     * @author Carlos Meneses
-     */
-    private void checkWin() {
-        if (game.isGameWon()) {
-            statusLabel.setText("🎉 ¡Felicidades! ¡Resolviste el Sudoku!");
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("¡Ganaste!");
-            alert.setHeaderText("🎉 ¡Sudoku completado!");
-            alert.setContentText("¡Excelente trabajo! ¿Quieres jugar de nuevo?");
-            alert.showAndWait();
-        }
-
-    }
-
-
-    /**
      * Called when the player has used all available hints.
      */
     @Override
     public void onHintsExhausted() {
-        statusLabel.setText("No quedan ayudas disponibles.");
+        statusLabel.setText("¡Solo queda una celda! Debes completarla tú mismo. 🏆");
     }
 
     /**
@@ -365,7 +282,7 @@ public class SudokuController implements GameEventListener {
      */
     @Override
     public void onValidMove(int row, int col, int value) {
-        cells[row][col].setStyle(baseStyle(row, col));
+        cells[row][col].setStyle(CellStyler.baseStyle(row, col));
         statusLabel.setText("Número válido.");
     }
 
@@ -379,14 +296,7 @@ public class SudokuController implements GameEventListener {
      */
     @Override
     public void onInvalidMove(int row, int col, int value) {
-        cells[row][col].setStyle(
-                baseStyle(row, col)
-                        + "-fx-background-color: #140000; "
-                        + "-fx-text-fill: white; "
-                        + "-fx-border-color: #ffd700; "
-                        + "-fx-border-width: 3;"
-        );
-
+        cells[row][col].setStyle(CellStyler.invalidStyle(row, col));
         statusLabel.setText("Movimiento inválido");
     }
 
@@ -413,11 +323,7 @@ public class SudokuController implements GameEventListener {
     public void onHintUsed(Cell cell, int remainingHints) {
         TextField tf = cells[cell.getRow()][cell.getCol()];
         tf.setText(String.valueOf(cell.getValue()));
-        tf.setStyle(
-                "-fx-background-color: #550000; "
-                        + "-fx-text-fill: #ffcccc; "
-                        + "-fx-font-weight: bold;"
-        );
+        tf.setStyle(CellStyler.hintStyle());
         tf.setEditable(false);
         statusLabel.setText("Ayuda usada. Quedan: " + remainingHints);
     }
