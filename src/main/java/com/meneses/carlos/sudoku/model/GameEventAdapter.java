@@ -8,6 +8,7 @@ package com.meneses.carlos.sudoku.model;
  * care about, instead of implementing the full interface each time.
  *
  * @author Jorge Navia
+ * @version 1.0
  */
 public abstract class GameEventAdapter implements GameEventListener {
 

@@ -29,6 +29,7 @@ import java.util.Optional;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 3.1
  */
 public class SudokuController extends GameEventAdapter {
 
@@ -65,6 +66,7 @@ public class SudokuController extends GameEventAdapter {
     @FXML private Button    hintButton;
     @FXML private Button    newGameButton;
     @FXML private Button    undoButton;
+    @FXML private Button    howToPlayButton;
     @FXML private Label     statusLabel;
     @FXML private Label     titleLabel;
 
@@ -146,6 +148,32 @@ public class SudokuController extends GameEventAdapter {
         refreshCell(undone.getRow(), undone.getCol());
         statusLabel.setText("Movimiento deshecho en ("
                 + undone.getRow() + ", " + undone.getCol() + ")");
+    }
+
+    /**
+     * Handles the "Cómo Jugar" button.
+     * Shows an informational alert explaining the board layout and controls.
+     *
+     * @param ignoredEvent The action event.
+     * @author Jorge Navia
+     */
+    @FXML
+    void handleHowToPlay(ActionEvent ignoredEvent) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Cómo Jugar");
+        alert.setHeaderText("Sudoku 6x6 — Reglas y controles");
+        alert.setContentText(
+                "• El tablero tiene 6 filas, 6 columnas y seis bloques de 2x3.\n"
+                        + "• Completa cada fila, columna y bloque con los números del 1 al 6, sin repetir.\n"
+                        + "• Haz clic en una celda vacía y escribe un número del 1 al 6.\n"
+                        + "• Las celdas con fondo oscuro son pistas fijas y no se pueden editar.\n"
+                        + "• Un borde dorado indica que el número ingresado viola una regla.\n"
+                        + "• \"Ayuda\" revela el valor correcto de una celda vacía al azar "
+                        + "(no funciona cuando solo queda una celda por llenar).\n"
+                        + "• \"Deshacer\" revierte tu último movimiento.\n"
+                        + "• \"Nuevo Juego\" genera un tablero distinto (pide confirmación)."
+        );
+        alert.showAndWait();
     }
 
     // ── Grid construction ────────────────────────────────────────────────────

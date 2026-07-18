@@ -6,6 +6,7 @@ package com.meneses.carlos.sudoku.model;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 1.2
  */
 public class Cell {
 

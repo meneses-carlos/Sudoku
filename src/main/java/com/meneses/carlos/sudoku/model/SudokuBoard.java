@@ -12,6 +12,7 @@ import java.util.Stack;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 1.3
  */
 public class SudokuBoard {
 

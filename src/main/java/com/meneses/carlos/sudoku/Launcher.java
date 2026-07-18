@@ -12,6 +12,7 @@ import javafx.application.Application;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 1.1
  */
 public class Launcher {
 

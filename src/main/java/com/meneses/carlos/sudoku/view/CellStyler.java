@@ -8,6 +8,7 @@ package com.meneses.carlos.sudoku.view;
  * focused on event handling instead of duplicating inline CSS.
  *
  * @author Jorge Navia
+ * @version 2.0
  */
 public final class CellStyler {
 

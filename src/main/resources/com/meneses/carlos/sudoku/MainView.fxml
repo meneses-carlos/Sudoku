@@ -33,6 +33,7 @@
                   <Button fx:id="newGameButton" mnemonicParsing="false" onAction="#handleNewGame" text="Nuevo Juego" />
                   <Button fx:id="hintButton" mnemonicParsing="false" onAction="#handleHint" text="Ayuda" />
                   <Button fx:id="undoButton" mnemonicParsing="false" onAction="#handleUndo" text="Deshacer" />
+                  <Button fx:id="howToPlayButton" mnemonicParsing="false" onAction="#handleHowToPlay" text="Cómo Jugar" />
                </children>
                <opaqueInsets>
                   <Insets />

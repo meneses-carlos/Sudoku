@@ -15,6 +15,7 @@ import java.io.IOException;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 1.1
  */
 
 public class SudokuApplication extends Application {

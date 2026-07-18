@@ -19,6 +19,7 @@ import java.util.Random;
  *
  * @author Jorge Navia
  * @author Carlos Meneses
+ * @version 2.1
  */
 public class SudokuGame {
 
